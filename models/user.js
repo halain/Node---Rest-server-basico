@@ -56,7 +56,8 @@ const UserSchema = Schema({
 //sobrescribir el metodo toJSON del schema para modificar los campos que se devuelven en el response
 UserSchema.methods.toJSON = function() {
     //se omiten __v y  password. El resto de los campos son agrupados en user y es lo que se retorna
-    const {__v, password, ...user} = this.toObject();
+    const {__v, password, _id, ...user} = this.toObject();
+    user.uid = _id;
     return user;
 }
 

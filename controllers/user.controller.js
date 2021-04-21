@@ -106,6 +106,7 @@ const usersPost = async (req = request, res = response) => {
  * @param {*} res 
  */
 const usersDelete = async(req = request, res = response) => {
+  
   const { id } = req.params;
 
   //borrado fisico de la bbdd
