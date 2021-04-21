@@ -1,51 +1,121 @@
 const { request, response } = require("express");
+const bcrypt = require('bcryptjs');
 
 
+const User  = require('../models/user');
 
-const usersGet = (req = request, res = response) => {
+
+/**
+ * Obtener los usuarios de la base de datos -Paginados
+ * @param {*} req 
+ * @param {*} res 
+ */
+const usersGet = async(req = request, res = response) => {
     //query params api/usuarios?q=hello&nombre=paco&apikey=125478
-    const {q, nombre, apikey} = req.query;
+    // const {q, nombre, apikey} = req.query;
 
-  res.json({
-    message: "Get OK from controller",
-    q,
-    nombre,
-    apikey
-  });
+    const { limite = 5, desde = 0 } = req.query;
+
+    const query = { estado: true };
+
+    // const users = await User.find(query)
+    //   .skip( Number( desde ) )
+    //   .limit( Number( limite ) );
+    // const total = await User.countDocuments(query);
+    // res.json({
+    //   total,
+    //   users
+    // });
+
+    //esta forma es mas eficiente xk se ejecutan las promesas simultaneamente
+    const [total, users] = await Promise.all([
+      User.countDocuments(query), //primera promesa = total
+      User.find(query) //segunda promesa = users
+      .skip( Number( desde ) )
+      .limit( Number( limite ) )
+    ])
+
+    res.json({
+      total,
+      users
+    });
 };
 
 
 
-const usersPut = (req = request, res = response) => {
 
-    //parametro de segmento URL users/10
+/**
+ * Actualizar usuario en bbdd
+ * @param {*} req 
+ * @param {*} res 
+ */
+const usersPut = async(req = request, res = response) => {
+
+    //parametro de segmento URL users/10685548995
     const {id} = req.params;
+    //_id siempre extraer del body, para evitar conflictos por si es enviado.
+    // password, google, correo, tambien son extraidos del body 
+    const { _id, password, google, correo, ...resto} = req.body;
+    
+    //validar contra BD
+    if (password){ //si es enviado el password es porque se quiere actualizar
+         //encriptar contraseña
+        const salt = bcrypt.genSaltSync(10);
+        resto.password = bcrypt.hashSync(password, salt);
+    }
 
-  res.json({
-    message: "Put OK from controller",
-    id
-  });
+    const user = await User.findByIdAndUpdate( id, resto);
+
+    res.json( user );
 };
 
 
-const usersPost = (req = request, res = response) => {
-    /**
-     * data de forms { name: "Fulano", edad: 15}
-     *  const { name, edad} = body
-     */
-    const body = req.body;
 
-  res.json({
-    message: "Post OK from controller",
-    body
-  });
+
+/**
+ * Crear registro nuevo de usuario en la bbdd
+ * @param {*} req 
+ * @param {*} res 
+ */
+const usersPost = async (req = request, res = response) => {  
+  
+    //en este punto ya fueron validados los campos en los middlewares del router
+    
+    //obtener los campos enviados desde el front
+    const {nombre, correo, password, rol} = req.body;
+   
+    //instancia del modelo para crear el document
+    const user = new User({nombre, correo, password, rol});
+    
+    //encriptar contraseña
+    const salt = bcrypt.genSaltSync(10);
+    user.password = bcrypt.hashSync(password, salt);
+
+    //persitir el modelo en le bbdd (se crea un nuevo document en la coleccion users)
+    await user.save();
+
+    res.json( user );
 
 };
 
 
-const usersDelete = (req = request, res = response) => {
+
+/**
+ * Eliminar usuario de bbdd, se cambia su estado a false
+ * @param {*} req 
+ * @param {*} res 
+ */
+const usersDelete = async(req = request, res = response) => {
+  const { id } = req.params;
+
+  //borrado fisico de la bbdd
+  // const user = await User.findByIdAndDelete( id );
+
+  //no elimina fisicamente, solo cambia el estado del usuario 
+  const user = await User.findByIdAndUpdate(id, {estado:false})
+
   res.json({
-    message: "Delete OK from controller",
+    user
   });
 };
 

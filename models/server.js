@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const userRoutes= require('../routes/user.routes');
+const { dbConnection } = require('../database/config');
 
 
 class Server {
@@ -11,10 +12,21 @@ class Server {
         //path base routes
         this.usuariosPath = '/api/usuarios';
 
-        
+        //conectar a base de datos
+        this.conectarDB();
+
+        //middlewares
         this.middlewares();
 
         this.routes();
+    }
+
+    /**
+     * Conexion a la base de datos de mongodb
+     */
+    async conectarDB(){
+        //Aqui se pueden hacer distintas conexiones a bbdd en dependencia del .env prod o dev
+        await dbConnection()
     }
 
 
