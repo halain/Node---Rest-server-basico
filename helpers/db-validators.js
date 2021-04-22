@@ -1,5 +1,5 @@
-const Role = require('../models/role');
-const User  = require('../models/user');
+const { Category, User, Role, Product } = require('../models');
+
 
 /**
  * Valida que el rol enviado exista en la bbdd en la coleccion Role
@@ -35,8 +35,34 @@ const existeUsuarioPorID = async ( id ) => {
 }
 
 
+/**
+ * Verifica que exista la categoria para el id 
+ * @param {*} id 
+ */
+const existCategoryById = async ( id ) => {
+    const existCategoryID = await Category.findById(id);
+    if (!existCategoryID) {
+        throw new Error(`No existe la categoría con el ID ${id}`);
+    }
+}
+
+
+/**
+ * Verifica que exista el producto para el id 
+ * @param {*} id 
+ */
+ const existProductById = async ( id ) => {
+    const existProductID = await Product.findById(id);
+    if (!existProductID) {
+        throw new Error(`No existe el producto con el ID ${id}`);
+    }
+}
+
+
 module.exports = {
     esRolValido,
     emailExiste,
-    existeUsuarioPorID
+    existeUsuarioPorID,
+    existCategoryById,
+    existProductById
 }

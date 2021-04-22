@@ -1,8 +1,12 @@
 const express = require('express');
 const cors = require('cors');
+const { dbConnection } = require('../database/config');
+
 const userRoutes= require('../routes/user.routes');
 const authRoutes= require('../routes/auth.routes');
-const { dbConnection } = require('../database/config');
+const categoryRoutes= require('../routes/category.routes');
+const productRoutes= require('../routes/product.routes');
+const buscarRoutes= require('../routes/buscar.routes');
 
 
 class Server {
@@ -11,8 +15,14 @@ class Server {
         this.app = express();
         this.port =  process.env.PORT;
         //path base routes
-        this.usuariosPath = '/api/usuarios';
-        this.authPath = '/api/auth';
+        this.path = {
+            auth:       '/api/auth',
+            category:   '/api/categories',
+            usuarios:   '/api/usuarios',
+            productos:  '/api/productos',
+            buscar:     '/api/search',
+        }
+        
 
         //conectar a base de datos
         this.conectarDB();
@@ -28,7 +38,7 @@ class Server {
      */
     async conectarDB(){
         //Aqui se pueden hacer distintas conexiones a bbdd en dependencia del .env prod o dev
-        await dbConnection()
+        await dbConnection();
     }
 
 
@@ -50,8 +60,11 @@ class Server {
      * rutas
      */
     routes() {
-        this.app.use(this.authPath, authRoutes);
-        this.app.use(this.usuariosPath, userRoutes);
+        this.app.use(this.path.auth, authRoutes);
+        this.app.use(this.path.buscar, buscarRoutes);
+        this.app.use(this.path.category, categoryRoutes);
+        this.app.use(this.path.usuarios, userRoutes);
+        this.app.use(this.path.productos, productRoutes);
     }
 
     /**
