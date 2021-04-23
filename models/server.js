@@ -1,12 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { dbConnection } = require('../database/config');
-
-const userRoutes= require('../routes/user.routes');
-const authRoutes= require('../routes/auth.routes');
-const categoryRoutes= require('../routes/category.routes');
-const productRoutes= require('../routes/product.routes');
-const buscarRoutes= require('../routes/buscar.routes');
+const  fileUpload  = require('express-fileupload');
 
 
 class Server {
@@ -21,6 +16,7 @@ class Server {
             usuarios:   '/api/usuarios',
             productos:  '/api/productos',
             buscar:     '/api/search',
+            uploads:     '/api/uploads',
         }
         
 
@@ -54,17 +50,26 @@ class Server {
 
         //directorio publico /public
         this.app.use(express.static('public'));
+
+        //fileupload
+        this.app.use(fileUpload({
+            useTempFiles : true,
+            tempFileDir : '/tmp/',
+            limits: { fileSize: 50 * 1024 * 1024 },
+            createParentPath: true //ojo con esta propiedad es peligrosa, crea automaticamente la carpeta donde se sube el file sino existe
+        }));
     }
 
     /**
      * rutas
      */
     routes() {
-        this.app.use(this.path.auth, authRoutes);
-        this.app.use(this.path.buscar, buscarRoutes);
-        this.app.use(this.path.category, categoryRoutes);
-        this.app.use(this.path.usuarios, userRoutes);
-        this.app.use(this.path.productos, productRoutes);
+        this.app.use(this.path.auth, require('../routes/auth.routes'));
+        this.app.use(this.path.buscar,  require('../routes/buscar.routes'));
+        this.app.use(this.path.category, require('../routes/category.routes'));
+        this.app.use(this.path.usuarios, require('../routes/user.routes'));
+        this.app.use(this.path.productos,  require('../routes/product.routes'));
+        this.app.use(this.path.uploads, require('../routes/uploads.routes'));
     }
 
     /**
